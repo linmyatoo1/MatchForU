@@ -1,0 +1,37 @@
+class ChatMessage {
+  final String sender;
+  final String message;
+  final String time;
+  final String imageUrl;
+  final bool isOnline;
+
+  ChatMessage({
+    required this.sender,
+    required this.message,
+    required this.time,
+    required this.imageUrl,
+    required this.isOnline,
+  });
+}
+
+class ChatUser {
+  final String name;
+  final String imageUrl;
+
+  ChatUser({
+    required this.name,
+    required this.imageUrl,
+  });
+}
+
+class Message {
+  final String text;
+  final String time;
+  final bool isSentByMe;
+
+  Message({
+    required this.text,
+    required this.time,
+    required this.isSentByMe,
+  });
+}
