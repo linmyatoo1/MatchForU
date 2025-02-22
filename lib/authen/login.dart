@@ -3,7 +3,11 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:match_for_u/authen/forgotpassword.dart';
 import 'package:match_for_u/authen/registration.dart';
+import 'package:match_for_u/screens/age_screen.dart';
 import 'package:match_for_u/welcome.dart';
+import 'package:match_for_u/models/token.dart';
+
+import '../models/token.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -13,6 +17,7 @@ class Login extends StatefulWidget {
 }
 
 class _LoginPageState extends State<Login> {
+
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -31,7 +36,6 @@ class _LoginPageState extends State<Login> {
     }
 
     const String url = "http://127.0.0.1:3000/api/v1/users/login";
-
     try {
       var response = await http.post(
         Uri.parse(url),
@@ -43,6 +47,9 @@ class _LoginPageState extends State<Login> {
       );
       var responseData = jsonDecode(response.body);
       if (response.statusCode == 200) {
+        final String token = responseData['token'];
+        await StorageService.saveToken(token);
+        print(token);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Login Successful")),
         );

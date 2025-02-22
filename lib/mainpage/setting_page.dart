@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:match_for_u/models/token.dart';
 import 'package:provider/provider.dart';
-import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
 import 'package:match_for_u/settingpage/about_us.dart';
 import 'package:match_for_u/settingpage/change_password.dart';
 import 'package:match_for_u/settingpage/delete_account.dart';
@@ -20,59 +22,89 @@ class SettingPage extends StatefulWidget {
 
 class _SettingPageState extends State<SettingPage> {
   bool pushNotifications = true;
-  String? userId;
-  String? username;
+  String? name;
   String? profileImage;
-
+  String? token;
+  int? age;
+  String? userBio;
+  Map<String, dynamic>? profileData;
+  
   @override
   void initState() {
     super.initState();
-    _getUserId(); //Get user ID first
+    _getUserToken(); //Get user ID first
   }
 
   // Fetch the user ID from backend
-  Future<void> _getUserId() async {
-    String userIdApi = "http://your-api-url.com/api/v1/profile/getUserId"; //
-
+  Future<void> _getUserToken() async {
+    
     try {
-      Dio dio = Dio();
-      Response response = await dio.get(userIdApi);
+      token = await StorageService.getToken();
+      print('Token: $token');
 
-      if (response.statusCode == 200) {
-        setState(() {
-          userId = response.data['data']['userId']; //Store user ID
-        });
-
-        // data using user ID
-        _fetchUserProfile();
-      }
+      if (token == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Authentication token not found")),
+      );
+      return;
+    }
+    _fetchUserProfile();
+    
     } catch (e) {
       print("Error fetching user ID: $e");
     }
   }
 
-  Future<void> _fetchUserProfile() async {
-    if (userId == null) return;
+ Future<void> _fetchUserProfile() async {
+  String profileApi = "http://127.0.0.1:3000/api/v1/users/profile";
 
-    String profileApi = "http://your-api-url.com/api/v1/user/profile/$userId";
+  try {
+    var uri = Uri.parse(profileApi);
+    var request = http.MultipartRequest('GET', uri);
 
-    try {
-      Dio dio = Dio();
-      Response response = await dio.get(profileApi);
+    // Add headers
+    request.headers.addAll({
+      "Authorization": "Bearer $token",
+      "Accept": "application/json", // Add this header to ensure JSON response
+    });
 
-      if (response.statusCode == 200) {
-        var profileData = response.data['data']['profile'];
+    var streamedResponse = await request.send();
+    var response = await http.Response.fromStream(streamedResponse);      
 
-        setState(() {
-          username = profileData['name'];
-          profileImage = profileData['photo'];
-        });
+    // Debug output
+    print("Status Code: ${response.statusCode}");
+    print("Response headers: ${response.headers}");
+    print("Raw response: ${response.body}");
+
+    if (response.statusCode == 200) {
+      // Only try to parse if we get a 200 status
+      Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+      profileData = jsonResponse['data']['profile'];
+      
+      setState(() {
+        name = profileData!['name'];
+        profileImage = profileData!['photo'];
+        userBio = profileData!['bio'];
+        age = profileData!['age'];
+      });
+    } else {
+      print("Error status code: ${response.statusCode}");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to load profile: Status ${response.statusCode}")),
+        );
       }
-    } catch (e) {
-      print("Error fetching profile: $e");
+    }
+  } catch (e) {
+    print("Error fetching profile: $e");
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to load profile: ${e.toString()}")),
+      );
     }
   }
-
+}
   @override
   Widget build(BuildContext context) {
     var themeProvider = Provider.of<ThemeProvider>(context);
@@ -103,12 +135,12 @@ class _SettingPageState extends State<SettingPage> {
                         radius: 30,
                         backgroundImage: profileImage != null
                             ? NetworkImage(profileImage!)
-                            : const AssetImage('images/default_avatar.png')
+                            : const AssetImage('images/linmyatoo.jpeg')
                                 as ImageProvider,
                       ),
                       const SizedBox(width: 20),
                       Text(
-                        username ?? "Loading...",
+                        name ?? "Loading...",
                         style: Theme.of(context).textTheme.headlineLarge,
                       ),
                     ],
@@ -122,7 +154,12 @@ class _SettingPageState extends State<SettingPage> {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => EditProfile()));
+                        MaterialPageRoute(builder: (context) => EditProfile(
+                          initialName: name,
+                          initialPhoto: profileImage,
+                          initialAge: profileData!['age'],
+                          initialBio: profileData!['bio'],
+                        ),),);
                   },
                 ),
                 ListTile(

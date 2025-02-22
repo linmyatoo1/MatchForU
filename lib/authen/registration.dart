@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:match_for_u/authen/login.dart';
+import 'package:match_for_u/screens/age_screen.dart';
 
 class Registration extends StatefulWidget {
   const Registration({super.key});
@@ -59,7 +60,7 @@ class _RegistrationPageState extends State<Registration> {
         );
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const Login()),
+          MaterialPageRoute(builder: (context) => const AgeScreen()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -1,11 +1,23 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
 import 'package:match_for_u/mainpage/setting_page.dart';
+import 'package:match_for_u/models/token.dart';
 
 class EditProfile extends StatefulWidget {
-  const EditProfile({super.key});
+  final String? initialName;
+  final String? initialBio;
+  final String? initialPhoto;
+  final int? initialAge;
+
+  const EditProfile(
+      {super.key,
+      this.initialName,
+      this.initialBio,
+      this.initialPhoto,
+      this.initialAge});
 
   @override
   _EditProfileState createState() => _EditProfileState();
@@ -14,16 +26,22 @@ class EditProfile extends StatefulWidget {
 class _EditProfileState extends State<EditProfile> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
-  String? _selectedDate;
   File? _imageFile;
+  String? _selectedDate;
+  int? _age;
+  String? _currentPhotoUrl;
   final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    _usernameController.text = "";
-    _bioController.text = "";
+    _usernameController.text = widget.initialName ?? "";
+    _bioController.text = widget.initialBio ?? "";
+    _age = widget.initialAge;
+    _currentPhotoUrl = widget.initialPhoto;
   }
+
+  String url = "http://127.0.0.1:3000/api/v1/users/profile";
 
   Future<void> _selectDate(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
@@ -34,9 +52,19 @@ class _EditProfileState extends State<EditProfile> {
     );
 
     if (pickedDate != null) {
+      DateTime currentDate = DateTime.now();
+      int age = currentDate.year - pickedDate.year;
+
+      // Adjust age if birthday hasn't occurred this year
+      if (currentDate.month < pickedDate.month ||
+          (currentDate.month == pickedDate.month &&
+              currentDate.day < pickedDate.day)) {
+        age--;
+      }
       setState(() {
         _selectedDate =
             "${pickedDate.day}/${pickedDate.month}/${pickedDate.year}";
+        _age = age;
       });
     }
   }
@@ -88,52 +116,80 @@ class _EditProfileState extends State<EditProfile> {
   }
 
   Future<void> _updateProfile() async {
-    // Store input values in variables
-    String username = _usernameController.text.trim();
-    String bio = _bioController.text.trim();
-    String? dateOfBirth = _selectedDate;
-    File? profileImage = _imageFile;
-
-    // Validate inputs
-    if (username.isEmpty || bio.isEmpty || dateOfBirth == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("All fields are required")),
-      );
-      return;
-    }
-
-    // API URL
-    String apiUrl = "http://your-api-url.com/api/v1/user/updateProfile";
-
     try {
-      // Prepare FormData
-      FormData formData = FormData.fromMap({
-        "username": username,
-        "bio": bio,
-        "date_of_birth": dateOfBirth,
-        "profile_image": profileImage != null
-            ? await MultipartFile.fromFile(profileImage.path,
-                filename: profileImage.path.split('/').last)
-            : null, // Send null if no image selected
+      String name = _usernameController.text.trim();
+      String bio = _bioController.text.trim();
+      int? age = _age;
+      File? profileImage = _imageFile;
+
+      // Validate inputs
+      if (name.isEmpty || bio.isEmpty || age == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("All fields are required")),
+        );
+        return;
+      }
+
+      String? token = await StorageService.getToken();
+      if (token == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Authentication token not found")),
+        );
+        return;
+      }
+
+      // Create multipart request
+      var uri = Uri.parse("http://127.0.0.1:3000/api/v1/users/profile");
+      var request = http.MultipartRequest('PATCH', uri);
+
+      // Add headers
+      request.headers.addAll({
+        "Authorization": "Bearer $token",
+        "Accept": "application/json",
       });
 
-      Dio dio = Dio();
-      Response response = await dio.post(apiUrl, data: formData);
+      // Add text fields
+      request.fields['name'] = name;
+      request.fields['bio'] = bio;
+      request.fields['age'] = age.toString();
 
-      if (response.statusCode == 200) {
+      // Add image if selected
+      if (profileImage != null) {
+        var stream = http.ByteStream(profileImage.openRead());
+        var length = await profileImage.length();
+        var multipartFile = http.MultipartFile('photo', stream, length,
+            filename: profileImage.path.split('/').last);
+        request.files.add(multipartFile);
+      }
+
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      Map<String, dynamic> responseData = {};
+      try {
+        responseData = jsonDecode(response.body);
+      } catch (e) {
+        print('Error parsing response: $e');
+      }
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Profile Updated Successfully")),
         );
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const SettingPage()),
         );
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed: ${response.data["message"]}")),
+          SnackBar(content: Text("Failed: ${response.body}")),
         );
       }
     } catch (e) {
+      print("Error updating profile: $e");
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
       );
@@ -166,7 +222,10 @@ class _EditProfileState extends State<EditProfile> {
                     radius: 50,
                     backgroundImage: _imageFile != null
                         ? FileImage(_imageFile!) as ImageProvider
-                        : const AssetImage('images/linmyatoo.jpeg'),
+                        : (_currentPhotoUrl != null &&
+                                _currentPhotoUrl!.isNotEmpty
+                            ? NetworkImage(_currentPhotoUrl!) as ImageProvider
+                            : const AssetImage('images/linmyatoo.jpeg')),
                   ),
                   GestureDetector(
                     onTap: _showImagePickerDialog,
@@ -200,7 +259,7 @@ class _EditProfileState extends State<EditProfile> {
                           color: Theme.of(context).primaryColor),
                       const SizedBox(width: 8),
                       Text(
-                        _selectedDate ?? "Choose birthday date",
+                        _age.toString() ?? "Choose birthday date",
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               color: Theme.of(context).primaryColor,
                             ),
