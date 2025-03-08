@@ -1,68 +1,66 @@
 import 'package:flutter/material.dart';
-import 'package:match_for_u/welcome.dart';
+import 'package:match_for_u/mainpage/activity_form.dart';
+import 'package:match_for_u/models/activity_detail.dart';
 
-class FavoritePage extends StatefulWidget {
-  const FavoritePage({super.key});
+class ActivityPage extends StatefulWidget {
+  const ActivityPage({super.key});
 
   @override
-  State<FavoritePage> createState() => _FavoritePageState();
+  State<ActivityPage> createState() => _ActivityPageState();
 }
 
-class _FavoritePageState extends State<FavoritePage> {
-  final List<Activity> activities = [
-    Activity(
-      name: 'Eat Moo Kra Tha, Okay Shabu',
-      description: 'Brianna B.',
-      time: '18:30',
-      currentParticipants: 2,
-      maxParticipants: 6,
-    ),
-    Activity(
-      name: 'Jogging, Outdoor stadium',
-      description: 'Casper K.',
-      time: '18:00',
-      currentParticipants: 2,
-      maxParticipants: 4,
-    ),
-    Activity(
-      name: 'Isabelle A.',
-      description: 'Board game, Ducatim',
-      time: '20:30',
-      currentParticipants: 5,
-      maxParticipants: 10,
-    ),
-    Activity(
-      name: 'Casper K.',
-      description: 'Jogging, Outdoor stadium',
-      time: '18:00',
-      currentParticipants: 2,
-      maxParticipants: 4,
-    ),
-    Activity(
-      name: 'Casper K.',
-      description: 'Jogging, Outdoor stadium',
-      time: '18:00',
-      currentParticipants: 2,
-      maxParticipants: 4,
-    ),
-    Activity(
-      name: 'Casper K.',
-      description: 'Jogging, Outdoor stadium',
-      time: '18:00',
-      currentParticipants: 2,
-      maxParticipants: 4,
-    ),
-  ];
+class _ActivityPageState extends State<ActivityPage> {
+  final List<Activity> activities = [];
+
+  bool isLoading = false;
+  final ActivityAPI activityAPI = ActivityAPI();
+
+  Future<void> loadActivities() async {
+  try {
+    setState(() {
+      isLoading = true;
+    });
+
+    final fetchedActivities = await ActivityAPI.getActivities();
+
+    setState(() {
+      activities.clear(); // Clear existing activities
+      // Convert the Map<String, dynamic> to Activity objects
+      activities.addAll(
+        fetchedActivities
+            .map((data) => Activity(
+                  name: data['name'] ?? '',
+                  description: data['description'] ?? '',
+                  time: data['time'] ?? '',
+                  currentParticipants: data['currentParticipants'] ?? 1,
+                  maxParticipants: data['maxParticipants'] ?? 1,
+                ))
+            .toList(),
+      );
+    });
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed to load activities: $e')),
+    );
+  } finally {
+    setState(() {
+      isLoading = false;
+    });
+  }
+}
+
+  @override
+  void initState() {
+    super.initState();
+    loadActivities(); // Load activities when page opens
+  }
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => Welcome()),
-        );
-        return true;
+        Navigator.of(context).pop();
+        return false;
       },
       child: Scaffold(
         appBar: AppBar(
@@ -71,17 +69,38 @@ class _FavoritePageState extends State<FavoritePage> {
         body: Column(
           children: [
             Expanded(
-              child: ListView.builder(
-                itemCount: activities.length,
-                itemBuilder: (context, index) {
-                  return ActivityCard(activity: activities[index]);
-                },
-              ),
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : activities.isEmpty
+                      ? const Center(child: Text('No activities available'))
+                      : ListView.builder(
+                          itemCount: activities.length,
+                          itemBuilder: (context, index) {
+                            return ActivityCard(activity: activities[index]);
+                          },
+                        ),
             ),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.white,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    builder: (BuildContext context) {
+                      return AddActivityForm(
+                        onSuccess: () {
+                          loadActivities();
+                        },
+                      );
+                    },
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.pinkAccent,
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -89,9 +108,12 @@ class _FavoritePageState extends State<FavoritePage> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text(
-                  'Add Your Activity',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
+                child: Padding(
+                  padding: const EdgeInsets.all(1.0),
+                  child: const Text(
+                    'Add Your Activity',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
                 ),
               ),
             ),

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:match_for_u/constants.dart';
 import 'package:match_for_u/mainpage/setting_page.dart';
 import 'package:match_for_u/models/token.dart';
 
@@ -41,7 +42,7 @@ class _EditProfileState extends State<EditProfile> {
     _currentPhotoUrl = widget.initialPhoto;
   }
 
-  String url = "http://127.0.0.1:3000/api/v1/users/profile";
+  String url = "$baseUrl/users/profile";
 
   Future<void> _selectDate(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
@@ -139,7 +140,7 @@ class _EditProfileState extends State<EditProfile> {
       }
 
       // Create multipart request
-      var uri = Uri.parse("http://127.0.0.1:3000/api/v1/users/profile");
+      var uri = Uri.parse("$baseUrl/users/profile");
       var request = http.MultipartRequest('PATCH', uri);
 
       // Add headers
@@ -165,6 +166,7 @@ class _EditProfileState extends State<EditProfile> {
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
+      // ignore: unused_local_variable
       Map<String, dynamic> responseData = {};
       try {
         responseData = jsonDecode(response.body);
@@ -259,7 +261,7 @@ class _EditProfileState extends State<EditProfile> {
                           color: Theme.of(context).primaryColor),
                       const SizedBox(width: 8),
                       Text(
-                        _age.toString() ?? "Choose birthday date",
+                        _selectedDate ?? "Choose birthday date",
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               color: Theme.of(context).primaryColor,
                             ),

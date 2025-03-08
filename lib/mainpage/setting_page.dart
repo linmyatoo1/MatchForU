@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:match_for_u/constants.dart';
 import 'package:match_for_u/models/token.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -57,7 +58,7 @@ class _SettingPageState extends State<SettingPage> {
   }
 
  Future<void> _fetchUserProfile() async {
-  String profileApi = "http://127.0.0.1:3000/api/v1/users/profile";
+  String profileApi = "$baseUrl/users/profile";
 
   try {
     var uri = Uri.parse(profileApi);

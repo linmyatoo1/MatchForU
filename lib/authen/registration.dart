@@ -1,8 +1,11 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+// ignore: depend_on_referenced_packages
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:match_for_u/authen/login.dart';
+import 'package:match_for_u/constants.dart';
+import 'package:match_for_u/models/token.dart';
 import 'package:match_for_u/screens/age_screen.dart';
 
 class Registration extends StatefulWidget {
@@ -41,7 +44,7 @@ class _RegistrationPageState extends State<Registration> {
       return;
     }
 
-    const String url = "http://127.0.0.1:3000/api/v1/users/sign-up";
+    const String url = "$baseUrl/users/sign-up";
 
     try {
       var response = await http.post(
@@ -55,6 +58,9 @@ class _RegistrationPageState extends State<Registration> {
       );
       var responseData = jsonDecode(response.body);
       if (response.statusCode == 200) {
+        final String token = responseData['token'];
+        await StorageService.saveToken(token);
+        print(token);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Registration Successful")),
         );

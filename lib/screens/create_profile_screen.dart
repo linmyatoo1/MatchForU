@@ -4,9 +4,8 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:match_for_u/authen/login.dart';
+import 'package:match_for_u/constants.dart';
 import 'package:match_for_u/models/token.dart';
-import 'package:match_for_u/welcome.dart';
-import 'package:http_parser/http_parser.dart';
 import 'dart:async';
 
 class CreateProfileScreen extends StatefulWidget {
@@ -50,86 +49,114 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
   }
 
   Future<void> submitProfileData() async {
-  try {
-    // Validate form inputs first
-    if (_imageFile == null) {
+    try {
+      // Validate form inputs first
+      if (_imageFile == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please select a profile photo")),
+        );
+        return;
+      }
+
+      final token = await StorageService.getToken();
+
+      if (token == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Authentication token not found")),
+        );
+        return;
+      }
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const Center(child: CircularProgressIndicator());
+        },
+      );
+
+      // Create multipart request
+      var uri = Uri.parse("$baseUrl/users/profile");
+      var request = http.MultipartRequest('POST', uri);
+
+      // Add headers
+      request.headers.addAll({
+        "Authorization": "Bearer $token",
+      });
+
+      // Add text fields
+      request.fields['name'] = _nameController.text;
+      request.fields['age'] = widget.age.toString();
+      request.fields['bio'] = _bioController.text;
+      request.fields['gender'] = widget.gender.toLowerCase();
+      request.fields['interest'] = widget.interest.toLowerCase();
+
+      // Add image with field name 'image' to match backend expectation
+      if (_imageFile != null) {
+        var file = await http.MultipartFile.fromPath(
+          'image', // Changed back to 'image' to match backend req.files.image
+          _imageFile!.path,
+        );
+        request.files.add(file);
+      }
+
+      // Send request
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please select a profile photo")),
-      );
-      return;
-    }
+      Navigator.pop(context);
 
-    final token = await StorageService.getToken();
-    print('Token: $token');
-    
-    if (token == null) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        await StorageService.clearToken();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Profile created successfully")),
+        );
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const Login()),
+          (Route<dynamic> route) => false,
+        );
+      } else {
+        final responseData = jsonDecode(response.body);
+        // Special handling for profile already exists error
+        if (response.statusCode == 400 &&
+            responseData["message"]?.contains("Profile already exist") ==
+                true) {
+          // Clear token
+          await StorageService.clearToken();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text(
+                    "Account created. Please login to access your profile.")),
+          );
+
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const Login()),
+            (Route<dynamic> route) => false,
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(
+                    responseData["message"] ?? "Failed to create profile")),
+          );
+        }
+      }
+    } catch (e) {
+      print('Error: $e');
       if (!mounted) return;
+      if (Navigator.of(context).canPop()) {
+        Navigator.pop(context);
+      }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Authentication token not found")),
-      );
-      return;
-    }
-
-    // Create multipart request
-    var uri = Uri.parse("http://127.0.0.1:3000/api/v1/users/profile");
-    var request = http.MultipartRequest('POST', uri);
-
-    // Add headers
-    request.headers.addAll({
-      "Authorization": "Bearer $token",
-    });
-
-    // Add text fields
-    request.fields['name'] = _nameController.text;
-    request.fields['age'] = widget.age.toString();
-    request.fields['bio'] = _bioController.text;
-    request.fields['gender'] = widget.gender.toLowerCase();
-    request.fields['interest'] = widget.interest.toLowerCase();
-
-    // Add image with field name 'image' to match backend expectation
-    if (_imageFile != null) {
-      var file = await http.MultipartFile.fromPath(
-        'image',  // Changed back to 'image' to match backend req.files.image
-        _imageFile!.path,
-      );
-      request.files.add(file);
-      print('Adding image to request: ${_imageFile!.path}');
-    }
-
-    print('Sending request with fields: ${request.fields}');
-    
-    // Send request
-    var streamedResponse = await request.send();
-    var response = await http.Response.fromStream(streamedResponse);
-    
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
-
-    if (!mounted) return;
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Profile created successfully")),
-      );
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const Login()),
-        (Route<dynamic> route) => false,
-      );
-    } else {
-      final responseData = jsonDecode(response.body);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(responseData["message"] ?? "Failed to create profile")),
+        SnackBar(content: Text("Error: $e")),
       );
     }
-  } catch (e) {
-    print('Error: $e');
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Error: $e")),
-    );
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -199,6 +226,7 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
             ),
             const SizedBox(height: 30),
             TextField(
+              style: TextStyle(color: Colors.black),
               controller: _nameController,
               decoration: InputDecoration(
                 labelText: 'Username',
@@ -211,6 +239,7 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
             ),
             const SizedBox(height: 20),
             TextField(
+              style: TextStyle(color: Colors.black),
               controller: _bioController,
               maxLines: 3,
               decoration: InputDecoration(

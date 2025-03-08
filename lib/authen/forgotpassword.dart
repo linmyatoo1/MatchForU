@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:match_for_u/constants.dart';
+
 class ForgotPassword extends StatefulWidget {
   const ForgotPassword({super.key});
 
@@ -23,7 +25,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
       return;
     }
 
-    const String url = "http://127.0.0.1:3000/api/v1/users/forgetPassword";
+    const String url = "$baseUrl/users/forgetPassword";
 
     try {
       var response = await http.post(

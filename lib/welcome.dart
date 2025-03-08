@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:match_for_u/mainpage/home_page.dart';
-import 'package:match_for_u/mainpage/favorie_page.dart';
+import 'package:match_for_u/mainpage/activity.dart';
 import 'package:match_for_u/mainpage/chat_page.dart';
 import 'package:match_for_u/mainpage/setting_page.dart';
 
@@ -16,7 +16,7 @@ class _WelcomeState extends State<Welcome> {
 
   final List<Widget> _pages = [
     HomePage(),
-    FavoritePage(),
+    ActivityPage(),
     ChatPage(),
     SettingPage(),
   ];
