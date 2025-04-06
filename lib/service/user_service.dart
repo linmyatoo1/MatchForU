@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:match_for_u/mainpage/home_page.dart';
 import 'package:match_for_u/models/token.dart';
 import 'package:match_for_u/constants.dart';
+import 'package:match_for_u/models/user_profile.dart';
 
 class UserService {
   static const String Url = '$baseUrl/users/recommend';
@@ -34,6 +34,7 @@ class UserService {
             name: userData['name'] ?? 'Unknown',
             age: userData['age'] ?? 0,
             imageUrl: userData['photo'] ?? 'https://via.placeholder.com/150',
+            bio: userData['bio'], // Added bio field
           )).toList();
         } else {
           throw Exception('Invalid response format from server');

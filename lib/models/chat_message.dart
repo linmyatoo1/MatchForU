@@ -17,10 +17,14 @@ class ChatMessage {
 class ChatUser {
   final String name;
   final String imageUrl;
+  final String? id;
+  final bool isOnline;
 
   ChatUser({
     required this.name,
     required this.imageUrl,
+    this.id,
+    this.isOnline = false,
   });
 }
 
