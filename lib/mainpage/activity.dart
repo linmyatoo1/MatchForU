@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:match_for_u/mainpage/activity_form.dart';
 import 'package:match_for_u/models/activity_detail.dart';
+import 'package:match_for_u/models/join_activity.dart' as join_api;
 
 class ActivityPage extends StatefulWidget {
   const ActivityPage({super.key});
@@ -16,38 +17,40 @@ class _ActivityPageState extends State<ActivityPage> {
   final ActivityAPI activityAPI = ActivityAPI();
 
   Future<void> loadActivities() async {
-  try {
-    setState(() {
-      isLoading = true;
-    });
+    try {
+      setState(() {
+        isLoading = true;
+      });
 
-    final fetchedActivities = await ActivityAPI.getActivities();
+      final fetchedActivities = await ActivityAPI.getActivities();
+      print(fetchedActivities);
 
-    setState(() {
-      activities.clear(); // Clear existing activities
-      // Convert the Map<String, dynamic> to Activity objects
-      activities.addAll(
-        fetchedActivities
-            .map((data) => Activity(
-                  name: data['name'] ?? '',
-                  description: data['description'] ?? '',
-                  time: data['time'] ?? '',
-                  currentParticipants: data['currentParticipants'] ?? 1,
-                  maxParticipants: data['maxParticipants'] ?? 1,
-                ))
-            .toList(),
+      setState(() {
+        activities.clear(); // Clear existing activities
+        // Convert the Map<String, dynamic> to Activity objects
+        activities.addAll(
+          fetchedActivities
+              .map((data) => Activity(
+                    id: data['id'] ?? '',
+                    name: data['name'] ?? '',
+                    description: data['description'] ?? '',
+                    time: data['time'] ?? '',
+                    currentParticipants: data['currentParticipants'] ?? 1,
+                    maxParticipants: data['maxParticipants'] ?? 1,
+                  ))
+              .toList(),
+        );
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load activities: $e')),
       );
-    });
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Failed to load activities: $e')),
-    );
-  } finally {
+    }
+    if (!mounted) return;
     setState(() {
       isLoading = false;
     });
   }
-}
 
   @override
   void initState() {
@@ -125,6 +128,7 @@ class _ActivityPageState extends State<ActivityPage> {
 }
 
 class Activity {
+  final String id;
   final String name;
   final String description;
   final String time;
@@ -132,6 +136,7 @@ class Activity {
   final int maxParticipants;
 
   Activity({
+    required this.id,
     required this.name,
     required this.description,
     required this.time,
@@ -202,7 +207,20 @@ class ActivityCard extends StatelessWidget {
             children: [
               Expanded(
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    try {
+                      await join_api.ActivityAPI.joinActivity(activity.id);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Joined activity successfully!')),
+                      );
+                      // Optional: reload activity list
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to join: $e')),
+                      );
+                    }
+                  },
                   style: TextButton.styleFrom(
                     backgroundColor: Colors.pink.shade100,
                     foregroundColor: Colors.black,

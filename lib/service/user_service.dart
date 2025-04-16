@@ -24,11 +24,11 @@ class UserService {
 
       if (response.statusCode == 200) {
         final decodedBody = json.decode(response.body);
-        
+
         // Check if the structure matches the backend response
         if (decodedBody['status'] == 'success' && decodedBody['data'] != null) {
           final List<dynamic> usersData = decodedBody['data']['randomUsers'] ?? [];
-          
+
           return usersData.map((userData) => UserProfile(
             id: userData['userId'] ?? 0,
             name: userData['name'] ?? 'Unknown',

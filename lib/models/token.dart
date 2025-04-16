@@ -41,6 +41,7 @@ class StorageService {
     return null;
   }
 
+
   static Future<void> clearUserProfile() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_userProfileKey);

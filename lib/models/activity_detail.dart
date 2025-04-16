@@ -62,11 +62,12 @@ class ActivityAPI {
           // Transform backend format to match your frontend model
           return activities
               .map((activity) => {
+                    'id': activity['_id'] ?? '',
                     'name': activity['activityName'] ?? '',
                     'description': activity['location'] ?? '',
                     'time': activity['time'] ?? '',
                     'currentParticipants':
-                        1, // Default as this isn't in your backend yet
+                        (activity['participants'] as List?)?.length ?? 1,
                     'maxParticipants': activity['number'] ?? 1,
                   })
               .toList();

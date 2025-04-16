@@ -1,0 +1,38 @@
+
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "match_for_u",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "match_for_u (profile mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "match_for_u (release mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        },
+        {
+            "name": "iPhone 16 Pro Max",
+            "request": "launch",
+            "type": "dart",
+            "deviceId": "8E379B0B-BF70-4B65-A5AA-82B9236CC4F4"
+        },
+        {
+            "name": "iPhone 16 Pro",
+            "request": "launch",
+            "type": "dart",
+            "deviceId": "262505D8-0E5E-4B00-9D05-8181A3811830"
+        },
+    ]
+}

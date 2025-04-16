@@ -106,7 +106,7 @@ class _HomePageState extends State<HomePage> {
       );
     } finally {
       setState(() {
-        isProcessingAction = false;
+        isProcessingAction = true;
       });
     }
   }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/chat_message.dart';
+import 'package:match_for_u/models/chat_message.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   final ChatUser chatUser;
@@ -12,15 +12,7 @@ class ChatDetailScreen extends StatefulWidget {
 
 class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final TextEditingController _messageController = TextEditingController();
-  final List<Message> messages = [
-    Message(text: "Hii👋", time: "2:55 PM", isSentByMe: false),
-    Message(
-      text: "Hey! How’s your day going? 😊",
-      time: "3:02 PM",
-      isSentByMe: true,
-    ),
-  ];
-
+  final List<Message> messages = [];
   void _sendMessage() {
     if (_messageController.text.trim().isNotEmpty) {
       setState(() {

@@ -1,12 +1,12 @@
 class ChatMessage {
-  final String sender;
+  final String receiver;
   final String message;
   final String time;
   final String imageUrl;
   final bool isOnline;
 
   ChatMessage({
-    required this.sender,
+    required this.receiver,
     required this.message,
     required this.time,
     required this.imageUrl,

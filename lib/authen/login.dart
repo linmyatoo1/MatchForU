@@ -21,6 +21,7 @@ class _LoginPageState extends State<Login> {
 
   bool _obscurePassword = true;
 
+
   Future<void> loginUser() async {
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
@@ -47,6 +48,7 @@ class _LoginPageState extends State<Login> {
       if (response.statusCode == 200) {
         final String token = responseData['token'];
         await StorageService.saveToken(token);
+
         print(token);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Login Successful")),
