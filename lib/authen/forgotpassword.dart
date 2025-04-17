@@ -44,9 +44,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(responseData["message"] ??
-                  "error occur")), //Error: ${response.body}
+          SnackBar(content: Text("error occur")), //Error: ${response.body}
         );
       }
     } catch (e) {

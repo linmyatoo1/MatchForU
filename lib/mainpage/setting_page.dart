@@ -93,7 +93,7 @@ class _SettingPageState extends State<SettingPage> {
       print("Error status code: ${response.statusCode}");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to load profile: Status ${response.statusCode}")),
+          SnackBar(content: Text("Failed to load profile:")),
         );
       }
     }
@@ -101,7 +101,7 @@ class _SettingPageState extends State<SettingPage> {
     print("Error fetching profile: $e");
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to load profile: ${e.toString()}")),
+        SnackBar(content: Text("Failed to load profile:")),
       );
     }
   }

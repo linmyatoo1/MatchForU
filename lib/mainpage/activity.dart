@@ -43,7 +43,7 @@ class _ActivityPageState extends State<ActivityPage> {
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load activities: $e')),
+        SnackBar(content: Text('Failed to load activities:')),
       );
     }
     if (!mounted) return;
@@ -217,7 +217,7 @@ class ActivityCard extends StatelessWidget {
                       // Optional: reload activity list
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed to join: $e')),
+                        SnackBar(content: Text('Failed to join:')),
                       );
                     }
                   },

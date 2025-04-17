@@ -186,14 +186,14 @@ class _EditProfileState extends State<EditProfile> {
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed: ${response.body}")),
+          SnackBar(content: Text("Failed:")),
         );
       }
     } catch (e) {
       print("Error updating profile: $e");
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
+        SnackBar(content: Text("Error:")),
       );
     }
   }

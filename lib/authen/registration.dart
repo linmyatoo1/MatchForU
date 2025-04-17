@@ -71,8 +71,8 @@ class _RegistrationPageState extends State<Registration> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(responseData["message"] ??
-                  "Registration failed: Please try again! ")), //${response.body}"
+            content: Text("Registration failed: Please try again! "),
+          ), //${response.body}"
         );
       }
     } catch (e) {

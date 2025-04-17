@@ -74,7 +74,7 @@ class _HomePageState extends State<HomePage> {
       print('Error during like operation: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: $e'),
+          content: Text('Something went wrong!'),
           backgroundColor: Colors.red,
         ),
       );
@@ -100,7 +100,7 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: $e'),
+          content: Text('Something went wrong!!!'),
           backgroundColor: Colors.red,
         ),
       );

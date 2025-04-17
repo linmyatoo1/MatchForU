@@ -15,12 +15,10 @@ class Login extends StatefulWidget {
 }
 
 class _LoginPageState extends State<Login> {
-
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
-
 
   Future<void> loginUser() async {
     String email = _emailController.text.trim();
@@ -60,8 +58,8 @@ class _LoginPageState extends State<Login> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(responseData["message"] ??
-                  "Login failed: Username or Password incorrect")), //${response.body}
+            content: Text("Login failed: Username or Password incorrect"),
+          ), //${response.body}
         );
       }
     } catch (e) {

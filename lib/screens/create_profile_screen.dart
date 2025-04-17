@@ -142,7 +142,7 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
                 content: Text(
-                    responseData["message"] ?? "Failed to create profile")),
+                     "Failed to create profile")),
           );
         }
       }
@@ -153,7 +153,7 @@ class _CreateProfileScreenState extends State<CreateProfileScreen> {
         Navigator.pop(context);
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
+        SnackBar(content: Text("Error: ")),
       );
     }
   }
